@@ -66,14 +66,14 @@ resource "yandex_iam_service_account" "ig-sa" {
   name        = "ig-sa"
   description = "service account to manage IG"
 }
-
+## Назначение роли сервисному аккаунту
 resource "yandex_resourcemanager_folder_iam_member" "editor" {
   folder_id   = local.folder_id
   role        = "editor"
   member      = "serviceAccount:${yandex_iam_service_account.ig-sa.id}"
   depends_on  = [ yandex_iam_service_account.ig-sa ]
 }
-
+## Создание группы ВМ
 resource "yandex_compute_instance_group" "ig-1" {
   name                  = "fixed-ig-with-balancer"
   folder_id             = local.folder_id
@@ -120,23 +120,23 @@ resource "yandex_compute_instance_group" "ig-1" {
     max_unavailable = 1
     max_expansion   = 0
   }
-
+## Для работы с Load Balancer
   # load_balancer {
   #   target_group_name        = "target-group"
   #   target_group_description = "load balancer target group"
   # }
-  
+## Для работы с Aplication Load Balancer  
   application_load_balancer {
     target_group_name        = "target-group"
     target_group_description = "Network Load Balancer target group"
   }
 }
 
-# Network
+## Сеть
 resource "yandex_vpc_network" "network-1" {
   name = "network1"
 }
-# Subnet
+## Подсеть
 resource "yandex_vpc_subnet" "internal-1" {
   name           = "internal-1"
   zone           = "ru-central1-a"
@@ -168,7 +168,7 @@ resource "yandex_vpc_route_table" "route-table-nat" {
   }
 }
 
-### Static IP
+### Внешний IP
 resource "yandex_vpc_address" "static" {
   name = "static"
   deletion_protection = "false"
@@ -205,7 +205,7 @@ resource "yandex_vpc_address" "static" {
 
 
 
-# Backend group
+## Backend group
 resource "yandex_alb_backend_group" "web-backend" {
   name                     = "web-backend"
   session_affinity {
@@ -234,7 +234,7 @@ resource "yandex_alb_backend_group" "web-backend" {
   }
 }
 
-# HTTP-router
+## HTTP-router
 resource "yandex_alb_http_router" "web-router" {
   name          = "web-router"
 } 
@@ -253,7 +253,7 @@ resource "yandex_alb_virtual_host" "my-virtual-host" {
   }
 }    
 
-#Load balancer
+## Load balancer
 resource "yandex_alb_load_balancer" "web-balancer" {
   name        = "web-balancer"
   network_id  = yandex_vpc_network.network-1.id
